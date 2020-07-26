@@ -1,3 +1,14 @@
+from PIL import Image
+import glob, os
+from os import listdir
+from os.path import isfile, join
+import numpy as np
+import cv2
+from pandas import DataFrame
+import pandas as pd
+from matplotlib import pyplot as plt
+
+
 def resize_image(imagen,size,output=False):
     im = Image.open(imagen)
     rgb_image = RGBA_a_RGB(im)
