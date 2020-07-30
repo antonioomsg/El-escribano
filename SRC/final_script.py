@@ -1,6 +1,7 @@
-#import all the necesary libs
-
 from __future__ import print_function
+#import all the necesary libs
+import time
+print("importando librerias")
 from sklearn.model_selection import train_test_split
 from keras.datasets import mnist
 from keras.models import Sequential
@@ -23,7 +24,6 @@ from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.applications.resnet import preprocess_input
 import numpy as np
 import argparse
-import time
 import keras
 from Fun_to_prepare_data import * 
 from helpers import *
@@ -44,8 +44,6 @@ def main(args):
 
     print("A continuación tendras que seleccionar con el raton una naranja, para poder saber la escala de tu imagen :)")
     wait = input("Presiona cualquier boton para continuar")
-
-
 
 
     WIDTH = 600
@@ -106,53 +104,47 @@ def main(args):
         preds_map.append((naranjaid,naranja_label,preds[x][0]))
 
     labels = {}
-    # loop over the predictions
+    # hacemos loop sobre el modelo.
     for (i, p) in enumerate(preds_map):
-        # grab the prediction information for the current ROI
         (imagenetID, label, prob) = p
-        # filter out weak detections by ensuring the predicted probability
-        # is greater than the minimum probability
+        # filtramos las predicciones que son inferiores a un rango.
         if prob >= 0.99:
-            # grab the bounding box associated with the prediction and
-            # convert the coordinates
+            # Cogemos la etiqueta de la prediccion y hallamos las coordenadas.
             box = locs[i]
-            # grab the list of predictions for the label and add the
-            # bounding box and probability to the list
+            # creamos una lista con las predicciones finales, su label y las corrdenadas
             L = labels.get(label, [])
             L.append((box, prob))
             labels[label] = L
 
-    # loop over the labels for each of detected objects in the image
+    # Hacemos un loop sobre los diferentes elementos, Naranjas, limones si hubiese...
     for label in labels.keys():
-        # clone the original image so that we can draw on it
-        print("[INFO] showing results for '{}'".format(label))
+        # Hacemos una copia de la imagen y así podemos dibujar sobre ella.
+        print("[INFO] Enseñando los resultado para... '{}'".format(label))
         clone = orig_bgr.copy()
-        # loop over all bounding boxes for the current label
+        # hacemos loop de todas las imagenes para cada label.
         for (box, prob) in labels[label]:
-            # draw the bounding box on the image
+            # dibujamos un rectangulo con las coordenadas que hemos obtenido anteriormente.
             (startX, startY, endX, endY) = box
             cv2.rectangle(clone, (startX, startY), (endX, endY),
                 (0, 255, 0), 2)
-        # show the results *before* applying non-maxima suppression, then
-        # clone the image again so we can display the results *after*
-        # applying non-maxima suppression
+        # Enseñamos los resultados antes de realizar el maxima supresion.
+        # clonamos de nuevo la imagen para poder enseñarla de nuevo mejorada.
         cv2.imshow("Before", clone)
         clone = orig_bgr.copy()
 
-    # extract the bounding boxes and associated prediction
-    # probabilities, then apply non-maxima suppression
+    # extraemos los rectangulo y sus predicciones y aplicamos el maxima suppresion
     boxes = np.array([p[0] for p in labels[label]])
     proba = np.array([p[1] for p in labels[label]])
     boxes = non_max_suppression(boxes, proba,overlapThresh=0.025)
-    print(len(boxes))
-    # loop over all bounding boxes that were kept after applying
-    # non-maxima suppression
+    print("En total el programa ha encontrado ",len(boxes),"naranjas")
+    # hacemos un loop sobre los rectangulos que nos quedaron despues de aplicar el non maxima supresion.
     for (startX, startY, endX, endY) in boxes:
-        # draw the bounding box and label on the image
+        # dibujamos los rectangulos.
         cv2.rectangle(clone, (startX, startY), (endX, endY),(0, 255, 0), 2)
         y = startY - 10 if startY - 10 > 10 else startY + 10
+        #el codigo de abajo impreme el label para cada rectangulo, en el caso de naranjas se queda muy apretado.
         #cv2.putText(clone, label, (startX, y),cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 0), 2)
-        # show the output after apply non-maxima suppression
+        # hacemos print despues de aplicar el maxima suppresion.
 
         cv2.imshow("After", clone)
     cv2.waitKey(0)
@@ -164,3 +156,4 @@ if __name__=="__main__":
     args = vars(ap.parse_args())
 
     main(args)
+
